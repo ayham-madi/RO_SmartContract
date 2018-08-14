@@ -1,0 +1,54 @@
+geth --networkid 9999 -datadir ethereum_9999/ init genesis.json
+
+geth --networkid 9999 -datadir ethereum_9999/
+
+geth --networkid 9999 --datadir ~/ethereum_9999/ --port 30303 --verbosity 0 --maxpeers 10 --nat "any" --rpc --rpccorsdomain "*" --unlock="7748441efde3970f01d6cf660751f9d188702590" --txpool.pricelimit 0 --mine --minerthreads=1 --etherbase=0x0000000000000000000000000000000000000000  console
+
+
+
+
+solcjs --abi roVAlidator.sol
+solcjs --bin roVAlidator.sol
+
+
+
+solcjs --abi StoreContract.sol
+solcjs --bin StoreContract.sol
+
+
+
+
+contractInstance.loadResources("RO:1111111", "QmWWQSuPMS6aXCbZKpEjPHPUZN2NjB3YrhJTHsV4X3vb2t1111", "input", "http://orcid.org/0000-0001-1212-XXXX")
+
+
+
+var ROManifestTxt1= '{ "@context": ["https://w3id.org/bundle/context"],'+
+'  "id": "RO:222222",'+
+'  "aggregates": ['+
+'    { "uri": "http://dx.doi.org/10.5281/zenodo.18877",'+
+'      "IPFSHash":"QmWWQSuPMS6aXCbZKpEjPHPUZN2NjB3YrhJTHsV4X3vb2t3333",'+
+'      "ResourceCategory": "input",'+
+'      "owner": "http://orcid.org/0000-0001-1212-XXXX",'+
+'      "bundledAs": { "uri": "urn:uuid:aaf448d5-bcdb-42fd-abb3-28ed4ddc93c3"}'+
+'    },'+
+'    { "uri": "/process.py",'+
+'      "IPFSHash":"QmWWQSuPMS6aXCbZKpEjPHPUZN2NjB3YrhJTHsV4X3vb212121",'+
+'      "ResourceCategory": "process",'+
+'      "owner": "http://orcid.org/0000-0001-1212-XXXX",'+
+'      "bundledAs": { "uri": "urn:uuid:2562a70c-93a3-4834-9f40-dc0217ebb300"}'+
+'    },'+
+'    { "uri": "/result.csv",'+
+'      "IPFSHash":"QmWWQSuPMS6aXCbZKpEjPHPUZN2NjB3YrhJTHsV4X3vb2t1231",'+
+'      "ResourceCategory": "result",'+
+'      "owner": "http://orcid.org/0000-0001-1212-XXXX",'+
+'      "bundledAs": { "uri": "urn:uuid:81c94a59-df75-4e3d-939b-dbd366a38328"}'+
+'    }'+
+'  ],'+
+'  "createdBy": {'+
+'    "name": "Ahmad Madi",'+
+'    "orcid": "http://orcid.org/0000-0001-1313-XXXX",'+
+'    "uri": "http://example.com/user/ahmad"'+
+'  }'+
+'}';
+
+var ROManifest1 = JSON.parse(ROManifestTxt1);

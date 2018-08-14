@@ -1,0 +1,91 @@
+pragma solidity ^0.4.24;
+
+
+contract LoadManifest {
+
+
+
+    struct ro {
+        string id;
+        bool initialized;
+        string ipfsAddress;
+    }
+
+    struct resource {
+        string ripfsAddress;
+        string resourceType;
+        string rownerId;
+        bool exist;
+    }
+
+    mapping(string  => ro) private roStore;
+    mapping(string => resource) private resourceMap;
+    mapping(string => mapping(string => bool)) private resourceOwner;
+    mapping(address => mapping(string => bool)) private walletStore;
+
+    mapping(string =>string) private packResources;
+
+    event CreateRO(address account, string  ipfsHash, string referencedPack);
+    event RejectRO(address account, string  ipfsHash, string message);
+    event RejectResource(address account, string ipfsHash, string message);
+    event CreateResource(address account, string ipfsHash, string owner);
+
+    event Change(string newPack, string  previousPack, string[] changesFiles, string[] newFiles);
+
+
+    constructor(string id, string ipfsHash, string previousPackHash) public {
+
+        if(!roStore[ipfsHash].initialized) {
+           emit RejectRO(msg.sender, ipfsHash, "This package is already uploaded.");
+           return;
+        }
+
+        roStore[ipfsHash] = ro(id, true, ipfsHash);
+        walletStore[msg.sender][ipfsHash] = true;
+        emit CreateRO(msg.sender, ipfsHash, previousPackHash);
+    }
+
+    function validateResources( string ripfsAddress, string resourceType, string ownerId) constant returns (bool){
+
+        if(resourceMap[ripfsAddress].exist){
+            if(resourceOwner[ripfsAddress][ownerId]){
+
+                emit RejectResource(msg.sender, ripfsAddress, "This file is regiestred to another scientist ..... Invalid Creator!");
+               return false;
+           }else{
+               return true;
+           }
+        }
+
+       resourceMap[ripfsAddress]= resource (ripfsAddress, resourceType, ownerId, true);
+    return true;
+    }
+
+
+    function addPackResources(string packHash, string h) public {
+
+        packResources [packHash] = h;
+    }
+
+    function getPAckResources(string packHash) constant returns(string){
+        return packResources[packHash];
+    }
+
+    function isOwnerOf(address owner, string ipfsHash) constant returns (bool) {
+
+        if(walletStore[owner][ipfsHash]) {
+         return true;
+        }
+
+        return false;
+    }
+
+
+
+    function getROByIpfsHash(string ipfs) constant returns (string, string) {
+
+        return (roStore[ipfs].id, roStore[ipfs].ipfsAddress);
+
+    }
+
+}

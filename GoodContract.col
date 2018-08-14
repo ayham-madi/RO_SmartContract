@@ -1,0 +1,39 @@
+pragma solidity ^0.4.24;
+
+
+contract StoreContract {
+
+  struct ro {
+    string ipfsAddress;
+    address owner;
+    bool initialized;
+    //Resource [] resources;
+  }
+
+
+  mapping(string  => string) private store;
+
+  mapping(string  => ro) private roStore;
+
+  event CreateRO(address account, string ipfsHash);
+  event RejectRO(address account, string message);
+
+
+  function setValue(string ipfsAddress) public{
+
+      if(roStore[ipfsAddress].initialized){
+          emit RejectRO( msg.sender, "Package already uploaded");
+          return;
+      }
+
+      roStore[ipfsAddress] = ro(ipfsAddress, msg.sender, true);
+      emit CreateRO(msg.sender, ipfsAddress);
+  }
+
+
+  function getValue(string ipfsAddress) public constant returns (string,address) {
+
+    return (roStore[ipfsAddress].ipfsAddress, roStore[ipfsAddress].owner);
+  }
+
+}
