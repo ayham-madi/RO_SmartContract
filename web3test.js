@@ -1,11 +1,10 @@
-
-
 var solc = require('solc');
 var Web3 = require('web3');
 var fs = require('fs');
-const bs58 = require('bs58')
+const bs58 = require('bs58');
 
 var manifestJSON = JSON.parse(fs.readFileSync('test cases/Case 1 /manifest.json', 'utf8'));
+
 
 if (typeof web3 !== 'undefined') {
   web3 = new Web3(web3.currentProvider);
@@ -42,9 +41,9 @@ abi = JSON.parse(output.contracts[contractName].interface);
 var myContract = new web3.eth.Contract(abi,{from: addr, gasPrice: '2100000'});
 
 var deployContract = myContract.deploy({data:byteCode});
-const { digest, hashFunction, size } = getBytes32FromMultiash(manifestJSON.IPFSHash.toString());
+//const { digest, hashFunction, size } = getBytes32FromMultiash(manifestJSON.IPFSHash.toString());
 
-console.log(" d: "+ digest+ " h: "+hashFunction+ " s: "+size);
+//console.log(" d: "+ digest+ " h: "+hashFunction+ " s: "+size);
 deployContract.send({from:web3.eth.coinbase, data:byteCode, gas: 2000000},function(error, transactionHash){ })
 .on('error', function(error){  })
 .on('transactionHash', function(transactionHash){ })
@@ -53,33 +52,80 @@ deployContract.send({from:web3.eth.coinbase, data:byteCode, gas: 2000000},functi
 })
 .on('confirmation', function(confirmationNumber, receipt){  })
 .then(function(newContractInstance){
+  var rodigest = getBytes32FromMultiash(manifestJSON.IPFSHash.toString());
+  var isPackLoaded;
+  newContractInstance.methods.isRoLoaded(rodigest).call({from: addr}).then(function(receipt){console.log("isRscLoaded receipt: "+receipt); isPackLoaded = receipt;});
+  if(isPackLoaded){
+    throw "Package is already uploaded!!";
+  }
+  for (i=0; i< manifestJSON.aggregates.length;i++){
+    var rscdigest = getBytes32FromMultiash(manifestJSON.aggregates[i].IPFSHash.toString());
 
-    console.log(newContractInstance.options.address) // instance with the new contract address
-    newContractInstance.methods.addScietistRO(digest, hashFunction, size).send({from: addr}, function(error, result){
-        console.log("result:" + result);
-        console.log("addScietistRO adding:" + manifestJSON.IPFSHash);
-    }).then(function(){
-        console.log('reacall function');
-    newContractInstance.methods.getNumberofPacs(addr).call({from: addr}).then(function(receipt){console.log("getNumberofPacs receipt: "+receipt);});
-    });
-    newContractInstance.methods.uploadRo(manifestJSON.IPFSHash, digest, hashFunction, size).send({from: addr}, function(error, result){
-        console.log("result:" + result);
+    var isRscValid = true;
+    newContractInstance.methods.validateResource(rscdigest,manifestJSON.aggregates[i].owner).call({from: addr}).then(function(receipt){console.log("isRscLoaded receipt: "+receipt);
+    if(receipt ==1 ) isRscValid = false;});
 
-    }).then(function(){
-        console.log('reacall function');;
-        newContractInstance.methods.isLoaded(manifestJSON.IPFSHash).call({from: addr}).then(function(receipt){console.log("getRo receipt: "+receipt);});
-    });
+      if (!isRscValid){
+        throw "this resource "+manifestJSON.aggregates[i].IPFSHash +" is not cited properly!!";
+    }
+  }
 
+  //Adding resources .....
+  var i;
+  for (i=0; i< manifestJSON.aggregates.length;i++){
+  var rscdigest = getBytes32FromMultiash(manifestJSON.aggregates[i].IPFSHash.toString());
+
+  var isLoaded;
+  newContractInstance.methods.isRscLoaded(rscdigest).call({from: addr}).then(function(receipt){console.log("isRscLoaded receipt: "+receipt); isLoaded = receipt;});
+  if(!isLoaded){
+
+  console.log("adding new Resource" + manifestJSON.aggregates[i].IPFSHash);
+  newContractInstance.methods.addNewRsc(rscdigest, manifestJSON.aggregates[i].ResourceCategory).send({from: addr}, function(error, result){
+      //console.log("result:" + result);
+    //  console.log("addScietistRO adding:" +rscdigest);
+  }).then(function(){
+      //console.log('reacall function');
   });
+  newContractInstance.methods.addScietistRsc(manifestJSON.aggregates[i].owner, rscdigest).send({from: addr}, function(error, result){
+      //console.log("result:" + result);
+    //  console.log("addScietistRO adding:" +rscdigest);
+  }).then(function(){
+      console.log('reacall function');
+  newContractInstance.methods.getNumberofScientistRcs(manifestJSON.aggregates[0].owner).call({from: addr}).then(function(receipt){console.log("getNumberofScientistRcs receipt: "+receipt);});
+  });
+  }
+
+  newContractInstance.methods.addRoRsc(rodigest, rscdigest).send({from: addr}, function(error, result){
+      //console.log("result:" + result);
+      // console.log("addScietistRO adding:" +rscdigest);
+  }).then(function(){
+    //  console.log('reacall function');
+  newContractInstance.methods.getNumberofRcsPerPac(rodigest).call({from: addr}).then(function(receipt){console.log("getNumberofRcsPerPac receipt: "+receipt);});
+  });
+}
+  //Adding Ro Pack
+  console.log(newContractInstance.options.address) // instance with the new contract address
+  newContractInstance.methods.addScietistRO(rodigest, hashFunction, size).send({from: addr}, function(error, result){
+    //console.log("result:" + result);
+    //  console.log("addScietistRO adding:" +digest);
+  }).then(function(){
+      console.log('reacall function');
+  newContractInstance.methods.getNumberofPacs(addr).call({from: addr}).then(function(receipt){console.log("getNumberofPacs receipt: "+receipt);});
+  });
+  var prePacdigest = getBytes32FromMultiash(manifestJSON.previousRO);
+  newContractInstance.methods.uploadRo(rodigest, prePacdigest).send({from: addr}, function(error, result){
+    //  console.log("result:" + result);
+
+  }).then(function(){
+      //console.log('reacall function');;
+      newContractInstance.methods.isLoaded(rodigest).call({from: addr}).then(function(receipt){console.log("getRo receipt: "+receipt);});
+  });
+
+});
 }
 
 function getBytes32FromMultiash(multihash) {
+
   const decoded = bs58.decode(multihash);
-
-  return {
-    digest: `0x${decoded.slice(2).toString('hex')}`,
-    hashFunction: decoded[0],
-    size: decoded[1],
-  };
-
+  return  `0x${decoded.slice(2).toString('hex')}`;
 }
